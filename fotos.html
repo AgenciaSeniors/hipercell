@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Hipercell · Prueba de fotos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="catalog-data.js" defer></script>
+  <script src="photos.js" defer></script>
+  <script src="photo-editor.js" defer></script>
+</head>
+<body>
+  <div class="preview">DEMOSTRACIÓN LOCAL <span>Las fotos se guardan solo en este navegador.</span></div>
+  <header class="header wrap"><a href="index.html" class="wordmark"><span class="brand-logo"><img src="assets/hipercell-logo-source.png" alt="Hipercell"></span></a><a href="index.html">Volver al catálogo ↗</a></header>
+  <main class="photo-editor wrap">
+    <p class="eyebrow">FOTOS DEL PRODUCTO</p><h1>Una pieza. Todos sus detalles.</h1>
+    <p>Prueba la carga de hasta 3 fotos por producto. La primera será la principal del catálogo y las demás aparecerán en su galería. Este editor de prueba todavía no guarda en Supabase ni sustituye al panel de administración.</p>
+    <label for="product-select">Selecciona un producto de ejemplo</label><select id="product-select"></select>
+    <label for="photo-files">Añadir fotos <span id="photo-count">0 / 3</span></label>
+    <div class="photo-uploader"><input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="photo-help"><small id="photo-help">JPG, PNG o WebP · Máximo 3 fotos en total · Hasta 5 MB por foto.</small></div>
+    <div id="photo-status" class="photo-status" role="status" aria-live="polite"></div>
+    <div id="photo-slots" class="photo-slots"></div>
+    <p class="photo-caption">Puedes quitar una foto y añadir otra, o elegir cuál será la principal.</p>
+    <div class="photo-actions"><button id="save-photos" class="button primary">Guardar fotos en este navegador</button><a id="view-product" href="index.html">Ver ficha del producto ↗</a></div>
+  </main>
+</body>
+</html>

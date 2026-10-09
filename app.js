@@ -2,16 +2,10 @@
 
 // Prototipo local: no lee ni modifica Supabase. Identidad y datos de muestra.
 const SETTINGS = Object.freeze({ currency: 'USD', whatsapp: '', demo: true });
-const PRODUCTS = Object.freeze([
-  { id: 'demo-01', name: 'Pantalla de repuesto', category: 'Repuestos', price: 35, kind: 'screen', featured: true, available: true, short: 'Una nueva vida para tu pantalla.', description: 'Producto ilustrativo para definir la ficha de repuestos. En el catálogo final se indicarán el modelo compatible, la calidad de la pieza y sus características.' },
-  { id: 'demo-02', name: 'Auriculares inalámbricos', category: 'Audio', price: 28, kind: 'audio', featured: true, available: true, short: 'Tu música, siempre contigo.', description: 'Producto de muestra. Las fotografías, autonomía, compatibilidad y especificaciones se completarán con los datos reales del negocio.' },
-  { id: 'demo-03', name: 'Cargador USB-C', category: 'Carga', price: 18, kind: 'charger', featured: false, available: true, short: 'Energía para seguir conectado.', description: 'Ejemplo de accesorio de carga. Antes de publicar se confirmarán la potencia, los protocolos de carga y el contenido del paquete.' },
-  { id: 'demo-04', name: 'Funda protectora', category: 'Accesorios', price: 8, kind: 'case', featured: false, available: true, short: 'Protección con personalidad.', description: 'Ejemplo de funda. En la versión final se mostrarán los modelos de teléfono compatibles, materiales y colores disponibles.' },
-  { id: 'demo-05', name: 'Batería de repuesto', category: 'Repuestos', price: 22, kind: 'battery', featured: false, available: false, short: 'Más vida para tu dispositivo.', description: 'Producto de muestra marcado como agotado para revisar ese estado. Los datos de capacidad y compatibilidad están pendientes.' },
-  { id: 'demo-06', name: 'Cable USB-C', category: 'Carga', price: 6, kind: 'cable', featured: false, available: true, short: 'Una conexión que te acompaña.', description: 'Ejemplo de cable de conexión. Longitud, conectores y capacidad de carga se definirán a partir del inventario real.' },
-  { id: 'demo-07', name: 'Soporte de escritorio', category: 'Accesorios', price: 12, kind: 'stand', featured: false, available: true, short: 'Tu pantalla, en su lugar.', description: 'Ejemplo de soporte de escritorio. Las dimensiones y materiales mostrados en la versión final corresponderán al producto real.' },
-  { id: 'demo-08', name: 'Altavoz portátil', category: 'Audio', price: 32, kind: 'speaker', featured: false, available: true, short: 'Lleva tu sonido más lejos.', description: 'Ejemplo de altavoz portátil. La potencia, conectividad y autonomía se completarán al incorporar los productos de Hipercell.' }
-]);
+const PRODUCTS = window.HIPERCELL_PRODUCTS;
+let productPhotos = {};
+let activeDetailId = null;
+let activePhotoIndex = 0;
 const $ = id => document.getElementById(id);
 const money = value => new Intl.NumberFormat('es', { style: 'currency', currency: SETTINGS.currency }).format(value);
 const escapeHTML = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -65,7 +59,7 @@ function renderProducts() {
   products.sort(sorting[$('sort').value] || sorting.featured);
   $('result-count').textContent = `${products.length} ${products.length === 1 ? 'producto' : 'productos'}`;
   $('empty').hidden = products.length !== 0;
-  $('products').innerHTML = products.map(p => `<article class="product-card"><button class="view-product" data-detail="${p.id}" aria-label="Ver ${escapeHTML(p.name)}"><div class="product-visual">${illustration(p.kind)}${!p.available ? '<span class="tag">AGOTADO</span>' : p.featured ? '<span class="tag featured">DESTACADO</span>' : '<span class="tag">DE MUESTRA</span>'}</div><div class="product-info"><p class="category-label">${escapeHTML(p.category)}</p><h3>${escapeHTML(p.name)}</h3><p class="short-desc">${escapeHTML(p.short)}</p></div></button><div class="product-bottom"><span class="price">${money(p.price)} <small>USD</small></span><button class="add" data-add="${p.id}" aria-label="Añadir ${escapeHTML(p.name)} al pedido" ${!p.available ? 'disabled' : ''}>＋</button></div></article>`).join('');
+  $('products').innerHTML = products.map(p => `<article class="product-card"><button class="view-product" data-detail="${p.id}" aria-label="Ver ${escapeHTML(p.name)}"><div class="product-visual">${productVisual(p)}${!p.available ? '<span class="tag">AGOTADO</span>' : p.featured ? '<span class="tag featured">DESTACADO</span>' : '<span class="tag">DE MUESTRA</span>'}</div><div class="product-info"><p class="category-label">${escapeHTML(p.category)}</p><h3>${escapeHTML(p.name)}</h3><p class="short-desc">${escapeHTML(p.short)}</p></div></button><div class="product-bottom"><span class="price">${money(p.price)} <small>USD</small></span><button class="add" data-add="${p.id}" aria-label="Añadir ${escapeHTML(p.name)} al pedido" ${!p.available ? 'disabled' : ''}>＋</button></div></article>`).join('');
 }
 function addProduct(id) {
   const product = PRODUCTS.find(p => p.id === id);
@@ -78,7 +72,7 @@ function canContact() { return !SETTINGS.demo && /^\d{8,15}$/.test(SETTINGS.what
 function renderCart() {
   const entries = PRODUCTS.filter(p => cart[p.id]);
   $('cart-count').textContent = Object.values(cart).reduce((a,b) => a+b, 0);
-  $('cart-items').innerHTML = entries.length ? entries.map(p => `<article class="cart-row">${illustration(p.kind)}<div><h3>${escapeHTML(p.name)}</h3><p>${money(p.price)} por unidad</p><div class="quantity"><button data-change="${p.id}" data-delta="-1" aria-label="Restar una unidad de ${escapeHTML(p.name)}">−</button><span aria-label="Cantidad">${cart[p.id]}</span><button data-change="${p.id}" data-delta="1" ${cart[p.id] >= 99 ? 'disabled' : ''} aria-label="Sumar una unidad de ${escapeHTML(p.name)}">＋</button><button class="remove" data-remove="${p.id}">Quitar</button></div></div></article>`).join('') : '<div class="cart-empty">Tu pedido está vacío. Explora el catálogo y añade lo que necesitas.</div>';
+  $('cart-items').innerHTML = entries.length ? entries.map(p => `<article class="cart-row">${productVisual(p)}<div><h3>${escapeHTML(p.name)}</h3><p>${money(p.price)} por unidad</p><div class="quantity"><button data-change="${p.id}" data-delta="-1" aria-label="Restar una unidad de ${escapeHTML(p.name)}">−</button><span aria-label="Cantidad">${cart[p.id]}</span><button data-change="${p.id}" data-delta="1" ${cart[p.id] >= 99 ? 'disabled' : ''} aria-label="Sumar una unidad de ${escapeHTML(p.name)}">＋</button><button class="remove" data-remove="${p.id}">Quitar</button></div></div></article>`).join('') : '<div class="cart-empty">Tu pedido está vacío. Explora el catálogo y añade lo que necesitas.</div>';
   $('cart-total').textContent = money(entries.reduce((total,p) => total+p.price*cart[p.id], 0));
   $('checkout').disabled = !entries.length || !canContact();
 }
@@ -95,12 +89,16 @@ function openWhatsApp(message) {
 function showDetail(id) {
   const p = PRODUCTS.find(product => product.id === id);
   if (!p) return;
-  $('detail-content').innerHTML = `<div class="detail-layout"><div class="detail-art">${illustration(p.kind)}</div><div class="detail-copy"><span class="category-label">${escapeHTML(p.category)} · EJEMPLO</span><h2 id="detail-title">${escapeHTML(p.name)}</h2><p>${escapeHTML(p.description)}</p><span class="price">${money(p.price)} <small>USD</small></span><button class="button primary" data-add="${p.id}" ${p.available ? '' : 'disabled'}>${p.available ? 'Añadir a mi pedido ＋' : 'Producto agotado'}</button><button class="button secondary" data-contact="${p.id}" ${canContact() ? '' : 'disabled'}>Consultar por WhatsApp ↗</button><p class="demo-note">Ilustración y precio de muestra. WhatsApp pendiente de configurar.</p></div></div>`;
+  activeDetailId = id;
+  activePhotoIndex = 0;
+  $('detail-content').innerHTML = `<div class="detail-layout"><div class="detail-gallery">${galleryHTML(p)}</div><div class="detail-copy"><span class="category-label">${escapeHTML(p.category)} · EJEMPLO</span><h2 id="detail-title">${escapeHTML(p.name)}</h2><p>${escapeHTML(p.description)}</p><span class="price">${money(p.price)} <small>USD</small></span><button class="button primary" data-add="${p.id}" ${p.available ? '' : 'disabled'}>${p.available ? 'Añadir a mi pedido ＋' : 'Producto agotado'}</button><button class="button secondary" data-contact="${p.id}" ${canContact() ? '' : 'disabled'}>Consultar por WhatsApp ↗</button><p class="demo-note">Producto y precio de muestra. WhatsApp pendiente de configurar.</p></div></div>`;
   if (!$('detail').open) $('detail').showModal();
 }
 document.addEventListener('click', event => {
   const target = event.target.closest('button');
   if (!target) return;
+  if (target.dataset.photo !== undefined) selectPhoto(Number(target.dataset.photo));
+  if (target.dataset.photoStep) selectPhoto(activePhotoIndex + Number(target.dataset.photoStep));
   if (target.dataset.category) {
     selectedCategory = target.dataset.category;
     for (const button of $('categories').children) button.setAttribute('aria-pressed', String(button === target));
@@ -142,5 +140,44 @@ for (const dialog of document.querySelectorAll('dialog')) {
   });
 }
 function readProductHash() { if (location.hash.startsWith('#producto=')) { try { showDetail(decodeURIComponent(location.hash.slice(10))); } catch { /* Ignore malformed links. */ } } }
-loadCart(); renderCategories(); renderProducts(); renderCart(); readProductHash();
+loadCart(); renderCategories(); renderProducts(); renderCart();
+refreshPhotos().then(readProductHash);
 window.addEventListener('hashchange', readProductHash);
+window.addEventListener('focus', refreshPhotos);
+
+
+function photosFor(product) { return productPhotos[product.id] || []; }
+function productVisual(product) {
+  const photos = photosFor(product);
+  return photos.length ? `<img class="product-photo" src="${escapeHTML(photos[0])}" alt="${escapeHTML(product.name)}" loading="lazy">` : illustration(product.kind);
+}
+function galleryHTML(product) {
+  const photos = photosFor(product);
+  if (!photos.length) return `<div class="detail-art">${illustration(product.kind)}</div><p class="gallery-caption">Ilustración de muestra · Hasta 3 fotos por producto</p>`;
+  return `<div class="detail-art"><img id="gallery-main" src="${escapeHTML(photos[0])}" alt="${escapeHTML(product.name)}, foto 1 de ${photos.length}"></div><div class="gallery-controls"><button data-photo-step="-1" aria-label="Foto anterior" ${photos.length < 2 ? 'disabled' : ''}>←</button><span id="photo-position" aria-live="polite">1 / ${photos.length}</span><button data-photo-step="1" aria-label="Foto siguiente" ${photos.length < 2 ? 'disabled' : ''}>→</button></div><div class="photo-thumbnails" role="group" aria-label="Fotos del producto">${photos.map((url,index)=>`<button data-photo="${index}" aria-label="Ver foto ${index+1}" aria-pressed="${index===0}"><img src="${escapeHTML(url)}" alt=""></button>`).join('')}</div>`;
+}
+function selectPhoto(index) {
+  const product = PRODUCTS.find(p=>p.id === activeDetailId);
+  if (!product) return;
+  const photos = photosFor(product);
+  if (!photos.length) return;
+  activePhotoIndex = (index + photos.length) % photos.length;
+  $('gallery-main').src = photos[activePhotoIndex];
+  $('gallery-main').alt = `${product.name}, foto ${activePhotoIndex+1} de ${photos.length}`;
+  $('photo-position').textContent = `${activePhotoIndex+1} / ${photos.length}`;
+  for (const button of document.querySelectorAll('[data-photo]')) button.setAttribute('aria-pressed', String(Number(button.dataset.photo)===activePhotoIndex));
+}
+async function refreshPhotos() {
+  try {
+    const photos = await window.HipercellPhotos.readAll();
+    const old = productPhotos;
+    productPhotos = Object.fromEntries(Object.entries(photos).map(([id,files])=>[id,files.map(file=>URL.createObjectURL(file))]));
+    renderProducts(); renderCart();
+    if ($('detail').open && activeDetailId) {
+      const product = PRODUCTS.find(p=>p.id === activeDetailId);
+      document.querySelector('.detail-gallery').innerHTML = galleryHTML(product);
+      activePhotoIndex = 0;
+    }
+    Object.values(old).flat().forEach(url=>URL.revokeObjectURL(url));
+  } catch { /* El catálogo funciona sin almacenamiento local de fotos. */ }
+}
