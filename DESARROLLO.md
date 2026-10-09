@@ -1,5 +1,13 @@
 # Hipercell — primera propuesta de catálogo
 
+## Estado actual de conexión (9 de octubre de 2026)
+
+Se añadió lectura desde el proyecto compartido de Supabase usando `catalogo_*`, después de revisar el repositorio catalogo-plantilla. `config.js` contiene credenciales públicas y el UUID previsto para el alta; el negocio todavía no se ha creado. Consultar `CONEXION-SUPABASE.md` y los dos SQL de `supabase/` para los pasos de activación y revisión de permisos. Los apartados siguientes describen la entrega inicial y sus pruebas; no sustituyen esta actualización.
+
+La web no mezcla datos remotos con la demo. La demo solo se abre de forma explícita mediante `?demo=1` o en el HTML portátil. WhatsApp permanece desactivado mediante `checkoutEnabled: false`. Las fotos remotas se leen de imagenes_url/imagen_url; el editor fotos.html sigue siendo SOLO una prueba local.
+
+Validación nueva: ocho pruebas del adaptador de lectura, con respuestas simuladas, superadas; cobertura de negocio, paginación, moneda, stock, fotos, entradas inválidas y errores. Consulta real limitada por nombre: la API respondió y no encontró Hipercell. No se verificó todavía lectura de productos reales, ejecución visual, permisos efectivos de administración ni subida remota. No se aplicó SQL al proyecto.
+
 Prototipo personalizado en HTML, CSS y JavaScript, sin dependencias de instalación. Abrir `index.html` o ejecutar `python -m http.server 8080` en la carpeta del proyecto.
 
 ## Identidad visual aplicada
