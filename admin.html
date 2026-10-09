@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><title>Hipercell · Administración</title>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="admin.css">
+  <script src="config.js" defer></script><script src="vendor/supabase.js" defer></script>
+  <script src="admin-api.js" defer></script><script src="admin.js" defer></script>
+</head>
+<body>
+  <header class="header wrap"><a class="wordmark" href="index.html"><span class="brand-logo"><img src="assets/hipercell-logo-source.png" alt="Hipercell"></span></a><a href="index.html" target="_blank" rel="noopener">Ver catálogo ↗</a></header>
+  <main class="wrap admin-shell">
+    <p id="admin-status" role="status" aria-live="polite"></p>
+    <section id="login-pane" class="admin-card login-card">
+      <p class="eyebrow">ADMINISTRACIÓN</p><h1>Tu catálogo, al día.</h1><p>Accede con la cuenta de Hipercell.</p>
+      <form id="login-form"><label for="email">Correo</label><input id="email" type="email" autocomplete="username" required>
+        <label for="password">Contraseña</label><input id="password" type="password" autocomplete="current-password" required>
+        <button class="button primary" type="submit">Entrar</button></form>
+    </section>
+    <section id="admin-pane" hidden>
+      <div class="admin-heading"><div><p class="eyebrow">HIPERCELL</p><h1>Gestiona tu catálogo.</h1></div><div><button id="reload" class="button secondary">Actualizar lista</button> <button id="logout" class="button secondary">Cerrar sesión</button></div></div>
+      <nav class="admin-nav" aria-label="Secciones del administrador"><button data-tab="products" aria-pressed="true">Productos</button><button data-tab="categories" aria-pressed="false">Categorías</button><button data-tab="business" aria-pressed="false">Tienda</button></nav>
+      <section id="tab-products" class="admin-tab">
+        <div class="admin-heading"><h2>Productos</h2><button id="new-product" class="button primary">Nuevo producto ＋</button></div>
+        <div class="admin-table-wrap admin-card"><table><thead><tr><th>Producto</th><th>Precio</th><th>Stock</th><th>Visibilidad</th><th>Acciones</th></tr></thead><tbody id="product-list"></tbody></table><p id="no-products" hidden>Aún no hay productos. Crea el primero.</p></div>
+        <form id="product-form" class="admin-card" hidden>
+          <h2 id="product-heading">Nuevo producto</h2><div class="form-grid">
+            <div><label for="product-name">Nombre</label><input id="product-name" required maxlength="160"></div>
+            <div><label for="product-category">Categoría</label><select id="product-category"></select></div>
+            <div><label for="product-price">Precio <span id="price-currency"></span></label><input id="product-price" type="number" min="0" step="0.01" required></div>
+            <div><label for="product-stock">Stock</label><input id="product-stock" type="number" min="0" step="1" placeholder="Sin límite de stock"></div>
+            <div><label for="product-state">Disponibilidad</label><select id="product-state"><option value="disponible">Disponible</option><option value="agotado">Agotado</option></select></div>
+            <div class="admin-checks"><label><input id="product-active" type="checkbox" checked> Visible en el catálogo</label><label><input id="product-featured" type="checkbox"> Destacado</label></div>
+          </div>
+          <label for="product-description">Descripción</label><textarea id="product-description" rows="4" maxlength="6000"></textarea>
+          <label for="photo-upload">Fotos <span id="admin-photo-count">0 / 3</span></label><input id="photo-upload" type="file" multiple accept="image/jpeg,image/png,image/webp" aria-describedby="admin-photo-help">
+          <p id="admin-photo-help" class="admin-help">Hasta tres fotos en total. JPG, PNG o WebP de hasta 5 MB. La primera será la principal.</p><div id="admin-photos" class="photo-slots"></div>
+          <div class="admin-actions"><button class="button primary" type="submit">Guardar producto</button><button id="cancel-product" class="button secondary" type="button">Cerrar edición</button></div>
+        </form>
+      </section>
+      <section id="tab-categories" class="admin-tab" hidden>
+        <h2>Categorías</h2><div id="category-list" class="admin-card"></div>
+        <form id="category-form" class="admin-card"><h3 id="category-heading">Nueva categoría</h3><div class="form-grid">
+          <div><label for="category-name">Nombre</label><input id="category-name" required maxlength="100"></div><div><label for="category-order">Orden</label><input id="category-order" type="number" value="0" min="0" step="1" required></div>
+        </div><label class="checkbox-label"><input id="category-active" type="checkbox" checked> Visible</label>
+          <p class="admin-help">Al ocultar una categoría, sus productos dejan de aparecer en el catálogo.</p><div class="admin-actions"><button class="button primary" type="submit">Guardar categoría</button><button id="new-category" class="button secondary" type="button">Nueva categoría</button></div>
+        </form>
+      </section>
+      <section id="tab-business" class="admin-tab" hidden>
+        <form id="business-form" class="admin-card"><h2>Datos de la tienda</h2><label for="business-phone">WhatsApp con código de país</label><input id="business-phone" type="tel" placeholder="Ejemplo: 5355555555">
+          <label for="business-currency">Moneda base</label><select id="business-currency"><option>CUP</option><option>USD</option><option>EUR</option></select>
+          <p class="admin-help">Cambiar la moneda no convierte los precios guardados. Los pedidos aún no están habilitados.</p><button class="button primary" type="submit">Guardar datos</button>
+        </form>
+      </section>
+    </section>
+  </main>
+</body></html>

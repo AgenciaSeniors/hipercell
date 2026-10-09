@@ -2,7 +2,7 @@
 
 ## Estado actual de conexión (9 de octubre de 2026)
 
-Se añadió lectura desde el proyecto compartido de Supabase usando `catalogo_*`, después de revisar el repositorio catalogo-plantilla. `config.js` contiene credenciales públicas y el UUID previsto para el alta; el negocio todavía no se ha creado. Consultar `CONEXION-SUPABASE.md` y los dos SQL de `supabase/` para los pasos de activación y revisión de permisos. Los apartados siguientes describen la entrega inicial y sus pruebas; no sustituyen esta actualización.
+Se añadió lectura desde el proyecto compartido de Supabase usando `catalogo_*`, después de revisar el repositorio catalogo-plantilla. El alta ya se confirmó y el adaptador real lee Hipercell en CUP, sin productos ni WhatsApp. Se añadió el panel `admin.html` y protección específica en SQL 04/05, pendientes de activar con el usuario `hipercell@gmail.com`. Consultar `ADMINISTRACION.md`. Los apartados siguientes describen la entrega inicial y sus pruebas; no sustituyen esta actualización.
 
 La web no mezcla datos remotos con la demo. La demo solo se abre de forma explícita mediante `?demo=1` o en el HTML portátil. WhatsApp permanece desactivado mediante `checkoutEnabled: false`. Las fotos remotas se leen de imagenes_url/imagen_url; el editor fotos.html sigue siendo SOLO una prueba local.
 

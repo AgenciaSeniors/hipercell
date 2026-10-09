@@ -5,6 +5,7 @@ window.HIPERCELL_CONFIG = Object.freeze({
   supabaseUrl: 'https://xwkmhpcombsauoozyidi.supabase.co',
   publishableKey: 'sb_publishable_5iDJi-xK69y1DM0nFYjqlw_TaozemSt',
   businessId: '46a2d035-836b-472c-9f1f-adcde294a923',
+  photoBucket: 'hipercell_imagenes',
   // Mantener desactivado hasta confirmar moneda, precios y WhatsApp reales.
   checkoutEnabled: false
 });
