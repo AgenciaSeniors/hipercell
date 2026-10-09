@@ -1,0 +1,9 @@
+{
+  "name": "hipercell",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {"test": "node --test"},
+  "engines": {"node": ">=22"},
+  "devDependencies": {"@electric-sql/pglite": "0.5.8"}
+}
+

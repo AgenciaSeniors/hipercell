@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121416">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Propuesta de catálogo personalizado para Hipercell.">
+  <title>Hipercell · Todo conecta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="supabase-data.js" defer></script>
+  <script src="catalog-data.js" defer></script>
+  <script src="photos.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#catalogo">Saltar al catálogo</a>
+  <div class="preview">PROPUESTA VISUAL <span>Productos y precios de ejemplo</span></div>
+  <header class="header wrap">
+    <a class="wordmark" href="#" aria-label="Hipercell, inicio"><span class="brand-logo"><img src="assets/hipercell-logo-source.png" alt="Hipercell"></span></a>
+    <nav aria-label="Navegación principal"><a href="#catalogo">Explorar catálogo</a><a href="#como-comprar">Cómo comprar</a></nav>
+    <button class="cart-trigger" id="open-cart" aria-label="Abrir pedido"><span aria-hidden="true">＋</span> Mi pedido <span class="count" id="cart-count">0</span></button>
+  </header>
+  <main>
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy"><p class="eyebrow"><span class="signal"></span> HIPERMERCADO TECNOLÓGICO</p>
+        <h1 id="hero-title">Tu tecnología.<br><span>Todo conecta.</span></h1>
+        <p class="intro">Todo lo que buscas para tu tecnología, en un solo lugar. Componentes, accesorios y soluciones para seguir conectado.</p>
+        <a class="button primary" href="#catalogo">Encuentra lo que necesitas <span aria-hidden="true">↗</span></a>
+        <div class="hero-meta"><span>01 / EXPLORA</span><span>02 / ELIGE</span><span>03 / CONECTA</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="art-label">DISEÑADO PARA CONECTAR <span>↗</span></div>
+        <div class="phone phone-back"><div class="camera"><i></i><i></i><i></i></div><div class="back-mark">HC</div></div>
+        <div class="phone phone-front"><div class="speaker"></div><div class="screen-design"><span>Todo<br>conecta.</span><div class="screen-ring"></div><small>HIPERCELL / TECH ESSENTIALS</small></div></div>
+        <div class="floating-chip"><span class="chip-icon">＋</span><div>Más posibilidades.<small>Una nueva forma de explorar.</small></div></div>
+        <span class="art-index">HC — 001 / CONCEPT</span>
+      </div>
+    </section>
+    <div class="value-strip"><div class="wrap"><span>ACCESORIOS PARA TU DÍA A DÍA</span><span aria-hidden="true">✳</span><span>REPUESTOS PARA SEGUIR</span><span aria-hidden="true">✳</span><span>TECNOLOGÍA A TU ALCANCE</span></div></div>
+    <section class="catalog wrap" id="catalogo" aria-labelledby="catalog-title">
+      <div class="section-heading"><div><p class="eyebrow">EXPLORA HIPERCELL</p><h2 id="catalog-title">Tu próximo imprescindible<span>.</span></h2></div><p>Encuentra. Elige. Conecta.</p></div>
+      <div class="toolbar"><label class="search"><span aria-hidden="true">⌕</span><input type="search" id="search" placeholder="¿Qué estás buscando?" aria-label="Buscar productos"></label><label class="sort-label">Ordenar<select id="sort"><option value="featured">Destacados</option><option value="low">Menor precio</option><option value="high">Mayor precio</option><option value="name">Nombre A–Z</option></select></label></div>
+      <div class="filter-row"><div id="categories" class="categories" role="group" aria-label="Filtrar por categoría"></div><label class="available"><input type="checkbox" id="available"> Solo disponibles</label></div>
+      <div class="results-meta"><span id="result-count" aria-live="polite"></span><span>CATÁLOGO DE MUESTRA · USD</span></div>
+      <p id="catalog-status" role="status" aria-live="polite"></p>
+      <button id="retry-catalog" class="button secondary" hidden>Volver a cargar catálogo</button>
+      <div id="products" class="product-grid"></div>
+      <div id="empty" class="empty" hidden><h3>No encontramos ese producto</h3><p>Prueba otro nombre o cambia los filtros.</p><button id="reset-filters" class="button secondary">Ver todos los productos</button></div>
+    </section>
+    <section class="how wrap" id="como-comprar" aria-labelledby="how-title"><div><p class="eyebrow">ASÍ DE FÁCIL</p><h2 id="how-title">De tu pantalla<br>a tu próxima conexión.</h2></div><div class="steps"><article><span>01</span><h3>Encuentra tu producto</h3><p>Explora el catálogo y revisa sus detalles.</p></article><article><span>02</span><h3>Arma tu pedido</h3><p>Añade tus favoritos o consulta un producto directamente.</p></article><article><span>03</span><h3>Hablemos por WhatsApp</h3><p>Confirmamos disponibilidad, pago y entrega contigo.</p></article></div></section>
+  </main>
+  <footer class="wrap"><a class="wordmark" href="#"><span class="brand-logo"><img src="assets/hipercell-logo-source.png" alt="Hipercell"></span></a><p>TODO CONECTA.</p><a href="fotos.html">Probar carga de fotos</a><a href="https://agenciaseniors.com" rel="noopener">Diseñado por señores. ↗</a></footer>
+  <dialog id="detail" class="detail-dialog" aria-labelledby="detail-title"><button class="close" data-close="detail" aria-label="Cerrar detalle">✕</button><div id="detail-content"></div></dialog>
+  <dialog id="cart" class="cart-dialog" aria-labelledby="cart-title"><div class="cart-heading"><div><p class="eyebrow">TU SELECCIÓN</p><h2 id="cart-title">Mi pedido<span>.</span></h2></div><button class="close" data-close="cart" aria-label="Cerrar pedido">✕</button></div><div id="cart-items"></div><div class="cart-bottom"><div class="total"><span>Total estimado</span><strong id="cart-total"></strong></div><p>La tienda confirmará disponibilidad, pago y entrega.</p><button id="checkout" class="button primary">Enviar pedido por WhatsApp ↗</button><p class="demo-note">Vista previa: el WhatsApp del negocio está pendiente de configurar.</p></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
