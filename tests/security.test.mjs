@@ -67,4 +67,3 @@ await db.exec(fs.readFileSync('supabase/06-cerrar-alta-publica-opcional.sql','ut
 const privileges=await db.query("select has_function_privilege('anon','public.catalogo_crear_negocio(uuid,text)','execute') as anon,has_function_privilege('authenticated','public.catalogo_crear_negocio(uuid,text)','execute') as authenticated,has_function_privilege('service_role','public.catalogo_crear_negocio(uuid,text)','execute') as service");
 assert.deepEqual(privileges.rows[0],{anon:false,authenticated:false,service:true});
 await db.close();console.log('PASS: SQL executed twice in isolated PostgreSQL; photo limits, categories, tenant RLS, immutable photos, admin linkage and optional helper privileges');
-

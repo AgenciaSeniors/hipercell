@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const context={window:{},URL,crypto};vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../settings.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../admin-api.js'),'utf8'),context);
 const biz='46a2d035-836b-472c-9f1f-adcde294a923';
 const config={businessId:biz,photoBucket:'hipercell_imagenes',supabaseUrl:'https://example.supabase.co'};
@@ -41,6 +42,13 @@ function fixture() {
  return {api:context.window.createHipercellAdminAPI(client,config),client,state,calls,uploads};
 }
 const input={nombre:'Nuevo producto',descripcion:'Detalles',precio:25,stock:3,categoria_id:1,estado:'disponible',destacado:false,activo:true,imagenes_url:[]};
+test('settings save weekly hours, social links and multi-currency rates without touching products',async()=>{
+ const {api,state}=fixture();await api.authorize();
+ const saved=await api.saveBusiness({whatsapp:'+53 5555 5555',currency:'CUP',monedas:{base:'CUP',activas:['CUP','USD'],tasas:{USD:400}},details:{direccion:'La Habana',instagram:'https://instagram.com/hipercell',facebook:'',horario:'Entregas de tarde',horario_semanal:{lun:{abierto:true,apertura:'09:00',cierre:'18:00'}}}});
+ assert.equal(saved.monedas.tasas.USD,400);assert.equal(saved.direccion,'La Habana');assert.equal(saved.horario_semanal.lun.abierto,true);assert.equal(saved.horario_semanal.dom.abierto,false);assert.equal(state.tables.catalogo_productos[0].precio,20);
+ await assert.rejects(api.saveBusiness({whatsapp:'',currency:'CUP',monedas:{base:'CUP',activas:['CUP','USD'],tasas:{USD:0}}}));
+ assert.equal(state.tables.catalogo_negocios[0].whatsapp,'5355555555');
+});
 test('no operations before verified user and business membership',async()=>{
  const {api,state}=fixture();await assert.rejects(api.saveProduct(input),/Inicia sesión/);
  state.user={id:'stranger'};await assert.rejects(api.authorize(),/no está vinculada/);await assert.rejects(api.listProducts());

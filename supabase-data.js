@@ -35,7 +35,7 @@ window.HipercellCatalog = (() => {
     }
     return products;
   }
-  async function load(config, fetcher = fetch) {
+  async function load(config, fetcher = fetch, businessOnly = false) {
     if (!uuid.test(config.businessId || '')) throw new Error('Falta el identificador válido de Hipercell.');
     const base = new URL(config.supabaseUrl);
     if (base.protocol !== 'https:' || base.username || base.password) throw new Error('URL de Supabase inválida.');
@@ -62,7 +62,7 @@ window.HipercellCatalog = (() => {
         if (page.length < 500) return result;
       }
     }
-    const businessRows = await read('catalogo_negocios', {select:'id,nombre,whatsapp,monedas',id:'eq.'+config.businessId,limit:1});
+    const businessRows = await read('catalogo_negocios', {select:'id,nombre,whatsapp,monedas,direccion,instagram,facebook,horario,horario_semanal',id:'eq.'+config.businessId,limit:1});
     const business = businessRows[0];
     if (!business || business.id !== config.businessId) throw new Error('Hipercell todavía no está dado de alta o no tiene lectura pública habilitada.');
     let currencies = business.monedas;
@@ -70,12 +70,14 @@ window.HipercellCatalog = (() => {
     const currency = currencies?.base;
     if (!/^[A-Z]{3}$/.test(currency || '')) throw new Error('Configura la moneda base de Hipercell en Supabase.');
     new Intl.NumberFormat('es', {style:'currency',currency});
+    const whatsapp = String(business.whatsapp || '').replace(/[\s()+-]/g,'');
+    if (businessOnly) return {business,currency,whatsapp};
     const [categories, rows] = await Promise.all([
       all('catalogo_categorias',{select:'id,negocio_id,nombre,activo',negocio_id:'eq.'+config.businessId,activo:'eq.true'}),
       all('catalogo_productos',{select:'id,negocio_id,categoria_id,nombre,descripcion,precio,stock,estado,destacado,activo,imagen_url,imagenes_url',negocio_id:'eq.'+config.businessId,activo:'eq.true'})
     ]);
-    const whatsapp = String(business.whatsapp || '').replace(/[\s()+-]/g,'');
     return {business, products:mapProducts(rows,categories,config.businessId),currency,whatsapp};
   }
-  return Object.freeze({load,mapProducts,photoURL});
+  const contact = (config, fetcher = fetch) => load(config, fetcher, true);
+  return Object.freeze({load,contact,mapProducts,photoURL});
 })();

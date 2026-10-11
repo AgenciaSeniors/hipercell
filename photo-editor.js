@@ -117,3 +117,4 @@ byId('save-photos').addEventListener('click', async () => {
 });
 window.addEventListener('beforeunload', event => { if (editor.dirty) { event.preventDefault(); event.returnValue = ''; } });
 renderSlots(); loadProduct(editor.productId);
+

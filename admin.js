@@ -28,10 +28,14 @@
     $('product-list').replaceChildren();$('category-list').replaceChildren();$('admin-photos').replaceChildren();
     $('product-form').reset();$('category-form').reset();$('business-form').reset();
     $('admin-pane').hidden=true;$('login-pane').hidden=false;$('password').value='';
+    window.dispatchEvent(new Event('hipercell:logout'));
   }
   function rowButton(label,action) { const button=document.createElement('button');button.type='button';button.textContent=label;button.addEventListener('click',action);return button; }
   function currency() { let value=state.business?.monedas;if(typeof value==='string')value=JSON.parse(value);return value?.base || 'CUP'; }
   function renderLists() {
+    $('summary-products').textContent=state.products.length;
+    $('summary-active').textContent=state.products.filter(p=>p.activo&&(p.categoria_id==null||state.categories.some(c=>String(c.id)===String(p.categoria_id)&&c.activo))).length;
+    $('summary-categories').textContent=state.categories.length;
     const list=$('product-list');list.replaceChildren();
     const format=new Intl.NumberFormat('es',{style:'currency',currency:currency()});
     for(const product of state.products) {
@@ -66,6 +70,7 @@
     $('business-phone').value=business.whatsapp || '';
     const code=currency();if(!Array.from($('business-currency').options).some(option=>option.value===code))$('business-currency').append(new Option(code,code));
     $('business-currency').value=code;
+    window.dispatchEvent(new CustomEvent('hipercell:business',{detail:business}));
   }
   function discardChanges() { return !state.dirty || window.confirm('Hay cambios sin guardar en este producto. ¿Quieres descartarlos?'); }
   function editProduct(product=null) {
@@ -150,7 +155,8 @@
   $('business-form').addEventListener('submit',event=>{event.preventDefault();run(async()=>{
     if(state.needsRefresh)throw new Error('Actualiza la lista antes de guardar de nuevo.');
     if($('business-currency').value!==currency()&&!window.confirm('Cambiar la moneda no convierte los precios. ¿Quieres cambiarla?'))return;
-    state.business=await api.saveBusiness({whatsapp:$('business-phone').value,currency:$('business-currency').value});renderLists();message('Datos de la tienda guardados.');
+    const extra=window.HipercellAdminExtras.read();
+    state.business=await api.saveBusiness({whatsapp:$('business-phone').value,currency:$('business-currency').value,...extra});renderLists();message('Datos de la tienda guardados.');
   });});
   for(const button of document.querySelectorAll('[data-tab]'))button.addEventListener('click',()=>{
     for(const tab of document.querySelectorAll('.admin-tab'))tab.hidden=tab.id!=='tab-'+button.dataset.tab;
@@ -181,6 +187,7 @@
     };
     client=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{global:{fetch:timedFetch},auth:{storage:window.sessionStorage,storageKey:`hipercell:${config.businessId}:auth`,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
     api=window.createHipercellAdminAPI(client,config);
+    window.HipercellAdminExtras.setStatsLoader(days=>api.statistics(days));
     client.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')loggedOut();});
     const {data,error}=await client.auth.getSession();if(error)throw new Error('No se pudo recuperar la sesión.');if(data.session)await enter();
   });

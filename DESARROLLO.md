@@ -1,61 +1,29 @@
-# Hipercell — primera propuesta de catálogo
+# Hipercell · catálogo y panel gerencial
 
-## Estado actual de conexión (9 de octubre de 2026)
+Sitio estático en HTML, CSS y JavaScript. Los datos, imágenes y cuentas se guardan en el proyecto compartido de Supabase, con consultas y permisos por negocio. El diseño es propio de Hipercell.
 
-Se añadió lectura desde el proyecto compartido de Supabase usando `catalogo_*`, después de revisar el repositorio catalogo-plantilla. El alta ya se confirmó y el adaptador real lee Hipercell en CUP, sin productos ni WhatsApp. Se añadió el panel `admin.html` y protección específica en SQL 04/05, pendientes de activar con el usuario `hipercell@gmail.com`. Consultar `ADMINISTRACION.md`. Los apartados siguientes describen la entrega inicial y sus pruebas; no sustituyen esta actualización.
+## Catálogo
 
-La web no mezcla datos remotos con la demo. La demo solo se abre de forma explícita mediante `?demo=1` o en el HTML portátil. WhatsApp permanece desactivado mediante `checkoutEnabled: false`. Las fotos remotas se leen de imagenes_url/imagen_url; el editor fotos.html sigue siendo SOLO una prueba local.
+Identidad Sistema Hiper en lima y grafito, símbolo original flotante en capas CSS, fondo con profundidad, movimiento adaptable y control de pausa. Incluye búsqueda, categorías, disponibilidad, ordenación, ficha con hasta tres fotos, carrito con límite de stock y pedidos o consultas por WhatsApp. Los precios, carrito y mensaje usan la moneda elegida y las tasas manuales del panel. El destinatario y las tasas se vuelven a comprobar antes de abrir WhatsApp.
 
-Validación nueva: ocho pruebas del adaptador de lectura, con respuestas simuladas, superadas; cobertura de negocio, paginación, moneda, stock, fotos, entradas inválidas y errores. Consulta real limitada por nombre: la API respondió y no encontró Hipercell. No se verificó todavía lectura de productos reales, ejecución visual, permisos efectivos de administración ni subida remota. No se aplicó SQL al proyecto.
+El pie enlaza al panel gerencial y a agenciaseniors.com. El botón de contratación abre el WhatsApp comercial de Señores, separado del número configurable que atiende pedidos de Hipercell.
 
-Prototipo personalizado en HTML, CSS y JavaScript, sin dependencias de instalación. Abrir `index.html` o ejecutar `python -m http.server 8080` en la carpeta del proyecto.
+## Administración
 
-## Identidad visual aplicada
+Acceso con Supabase Auth y vínculo con Hipercell. Productos, categorías, precios, stock, estado, fotos y portada; datos de atención, dirección, redes, horario de Cuba, monedas y tasas. Navegación lateral en escritorio, navegación compacta en móvil y resumen de inventario. Incluye enlace y QR SVG, estadísticas de vistas y productos solicitados por WhatsApp.
 
-- Portada tecnológica en grafito, dispositivos ilustrados con CSS y cuadrícula sutil.
-- Catálogo claro para facilitar la lectura y comparar productos.
-- Documento recibido: Hipercell Sistema Hiper Carrito Integrado. Lima #C6EF00, grafito #121416, blanco #F6F7F4, gris #969C9E y carbón #0A0B0C. Montserrat 400–800 mediante Google Fonts, con fallback local.
-- Logo original extraído del DOCX sin alterar sus píxeles; la presentación CSS elimina el margen visual exterior. No se ha redibujado el símbolo. El PNG es una referencia raster, no un vector maestro.
-- Mensajes: «Todo conecta» y «Hipermercado tecnológico». Productos e ilustraciones siguen siendo demostrativos.
-- Diseño adaptable, controles de teclado, diálogos nativos, estados vacíos y respeto por movimiento reducido.
+Ver ADMINISTRACION.md y FUNCIONES-DEL-PANEL.md para los detalles. Las solicitudes son aperturas de WhatsApp, no ventas confirmadas.
 
-## Incluido en esta entrega
+## Desarrollo y pruebas
 
-- Ocho productos de demostración con precios ficticios, identificados en la interfaz.
-- Búsqueda sin distinción de tildes, categorías, ordenación y filtro de disponibilidad.
-- Ficha individual y enlaces con `#producto=ID`.
-- Carrito con cantidades, total y persistencia local validada. El carrito es de demostración y no reserva stock.
-- Composición de mensajes para consultar un producto y pedir varios productos por WhatsApp. Envío deshabilitado en modo demo y sin número configurado; no se contacta a nadie.
-- Google Fonts para Montserrat. Sin claves API ni conexión a la base de datos existente.
+Servir esta carpeta por HTTP local; por ejemplo, python -m http.server 8877 --bind 127.0.0.1. Abrir /index.html y /admin.html. El panel no permite iniciar sesión desde file://. index.html?demo=1 carga ejemplos explícitos y bloquea WhatsApp; un error remoto nunca se sustituye por una demo.
 
-## Integración pendiente
+Con Node 22 o posterior: npm install y npm test. Las dependencias de desarrollo se usan solo en las pruebas. La web no requiere instalar Node o compilarse en Hostinger.
 
-Mantener el MISMO proyecto de Supabase que los menús y catálogos de la agencia. La familia de tablas todavía no está decidida: el cliente aclaró que `catalogo_*` pertenece a su plantilla económica. Revisar ese código y sus automatismos antes de reutilizar las tablas; compartirlas no implica reutilizar el diseño.
+21 pruebas de adaptadores/configuración y suites de SQL en PostgreSQL aislado superadas. También se comprobaron recorridos en DOM simulado: monedas, galería, stock, carrito, enlaces, configuración, QR y estadísticas. La revisión corrigió la referencia al pie, validación de tasas inactivas y respuestas atrasadas tras cerrar sesión.
 
-Esquema conocido: `restaurantes`/`productos`/`perfiles_admin`, y `catalogo_negocios`/`catalogo_categorias`/`catalogo_productos`/`catalogo_usuarios_negocio`. No ejecutar el esquema de contexto como migración.
+El navegador automatizado no arranca en este entorno: no se considera completada la revisión visual real de móvil. El usuario confirmó previamente acceso, productos, fotos y WhatsApp contra Supabase. Las pruebas nuevas de interfaz usan datos y sesión simulados.
 
-Antes de conectar producción:
+## Estado de publicación
 
-1. Incorporar productos, categorías, moneda y WhatsApp reales; la identidad ya se recibió.
-2. Revisar RLS de tablas y Storage, pertenencia del administrador y coherencia entre negocio, categoría y producto. No considerar suficiente un filtro JavaScript por negocio.
-3. Implementar el adaptador de lectura y un panel de administración con permisos por negocio. El admin no está incluido todavía.
-4. Validar precios y disponibilidad reales; eliminar datos y mensajes de demo, ajustar moneda, activar WhatsApp y revisar el flujo completo. `SETTINGS.demo` protege contra envíos de prueba accidentales y no debe desactivarse antes de sustituir los datos.
-5. Incorporar el dominio final, metadatos, fotografías optimizadas y retirar `noindex` al publicar.
-
-No se han creado tablas, aplicado migraciones, editado políticas, dado de alta usuarios ni modificado negocios existentes. No se ha publicado un sitio.
-
-## Validación
-
-Sintaxis JavaScript revisada. Pruebas de interacción en DOM simulado (jsdom) superadas: búsqueda sin tildes, categorías, disponibilidad, estado vacío, añadir/cambiar/quitar productos, totales, persistencia, contenido de fichas, enlaces a producto y bloqueo del envío en modo demo. Los diálogos nativos y el diseño adaptable requieren aún revisión en navegador real. La revisión visual en navegador está pendiente: Chromium no pudo descargarse en el entorno de trabajo. No presentar este prototipo como versión final de producción.
-
-## Requisito confirmado: máximo 3 fotos por producto
-
-- Editor de prueba en `fotos.html`: añadir varias imágenes, vista previa, quitar y hacer principal. Primera imagen = portada; hasta dos adicionales en la ficha.
-- Límite total de 3 validado al seleccionar y al guardar, contando las fotos existentes. Seleccionar más de las permitidas rechaza el lote completo y conserva las fotos anteriores.
-- JPG/PNG/WebP, máximo 5 MB por archivo, con comprobación de decodificación en navegador antes de aceptar. SVG no permitido como foto subida.
-- Galería con miniaturas, contador y navegación circular; 0 fotos muestra la ilustración de respaldo, 1 foto desactiva las flechas, 2 o 3 permiten recorrerlas.
-- Persistencia SOLO local en IndexedDB, por producto. Se mantienen al volver a abrir el catálogo en el mismo navegador y origen. No son públicas ni se sincronizan con otros dispositivos; borrar datos del navegador las elimina. Servir por HTTP local para un origen consistente.
-- Al integrar Supabase, reemplazar el adaptador local con Storage y permisos del negocio, y hacer cumplir el máximo de 3 en la base de datos o backend, además del frontend. Ninguna migración se ha aplicado. El límite remoto no está implementado todavía.
-- El documento de identidad original permanece sin modificaciones.
-
-Pruebas de fotos superadas con jsdom e IndexedDB simulado: límite total al seleccionar y guardar; rechazo de cuarta foto conservando las tres anteriores; formato y tamaño; separación por producto; cambio de principal; eliminación; galería con 0, 1 y 3 fotos; navegación circular; regresión del carrito. Decodificación real de imágenes y revisión visual siguen pendientes en navegador.
+Ubicación prevista: https://agenciaseniors.com/hipercell/ en Hostinger. No se ha desplegado. Se conserva noindex,nofollow al presentarlo como ejemplo de cliente. Al subir los archivos, index.html y admin.html deben quedar directamente en public_html/hipercell junto con assets y vendor. No ejecutar los SQL otra vez como parte de subir archivos.

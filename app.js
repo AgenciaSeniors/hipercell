@@ -9,7 +9,8 @@ let productPhotos = {};
 let activeDetailId = null;
 let activePhotoIndex = 0;
 const $ = id => document.getElementById(id);
-const money = value => new Intl.NumberFormat('es', { style: 'currency', currency: SETTINGS.currency }).format(value);
+const displayCurrency = () => SETTINGS.demo ? SETTINGS.currency : window.HipercellExtras.currency();
+const money = value => new Intl.NumberFormat('es', { style: 'currency', currency: displayCurrency() }).format(SETTINGS.demo ? value : window.HipercellExtras.convert(value));
 const escapeHTML = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const STORAGE_KEY = DEMO ? 'hipercell:prototype:cart:v1' : `hipercell:${CONFIG.businessId}:cart:v1`;
 let selectedCategory = 'Todos';
@@ -61,7 +62,7 @@ function renderProducts() {
   products.sort(sorting[$('sort').value] || sorting.featured);
   $('result-count').textContent = `${products.length} ${products.length === 1 ? 'producto' : 'productos'}`;
   $('empty').hidden = products.length !== 0;
-  $('products').innerHTML = products.map(p => `<article class="product-card"><button class="view-product" data-detail="${p.id}" aria-label="Ver ${escapeHTML(p.name)}"><div class="product-visual">${productVisual(p)}${!p.available ? '<span class="tag">AGOTADO</span>' : p.featured ? '<span class="tag featured">DESTACADO</span>' : (SETTINGS.demo ? '<span class="tag">DE MUESTRA</span>' : '')}</div><div class="product-info"><p class="category-label">${escapeHTML(p.category)}</p><h3>${escapeHTML(p.name)}</h3><p class="short-desc">${escapeHTML(p.short)}</p></div></button><div class="product-bottom"><span class="price">${money(p.price)} <small>${escapeHTML(SETTINGS.currency)}</small></span><button class="add" data-add="${p.id}" aria-label="Añadir ${escapeHTML(p.name)} al pedido" ${!p.available ? 'disabled' : ''}>＋</button></div></article>`).join('');
+  $('products').innerHTML = products.map(p => `<article class="product-card"><button class="view-product" data-detail="${p.id}" aria-label="Ver ${escapeHTML(p.name)}"><div class="product-visual">${productVisual(p)}${!p.available ? '<span class="tag">AGOTADO</span>' : p.featured ? '<span class="tag featured">DESTACADO</span>' : (SETTINGS.demo ? '<span class="tag">DE MUESTRA</span>' : '')}</div><div class="product-info"><p class="category-label">${escapeHTML(p.category)}</p><h3>${escapeHTML(p.name)}</h3><p class="short-desc">${escapeHTML(p.short)}</p></div></button><div class="product-bottom"><span class="price">${money(p.price)} <small>${escapeHTML(displayCurrency())}</small></span><button class="add" data-add="${p.id}" aria-label="Añadir ${escapeHTML(p.name)} al pedido" ${!p.available ? 'disabled' : ''}>＋</button></div></article>`).join('');
 }
 function addProduct(id) {
   const product = PRODUCTS.find(p => p.id === id);
@@ -84,17 +85,33 @@ function contactProduct(id) {
   if (!canContact()) return;
   const p = PRODUCTS.find(item => item.id === id);
   if (!p) return;
-  openWhatsApp(`Hola, Hipercell. Quisiera consultar por ${p.name} (${money(p.price)}).\n${productURL(p.id)}`);
+  openWhatsApp(`Hola, Hipercell. Quisiera consultar por ${p.name} (${money(p.price)} ${displayCurrency()}).\n${productURL(p.id)}`,[{id:Number(p.id),cantidad:1}]);
 }
-function openWhatsApp(message) {
-  window.open(`https://wa.me/${SETTINGS.whatsapp}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+async function openWhatsApp(message,items) {
+  // Abrir durante el clic evita el bloqueo de ventanas tras la lectura asíncrona.
+  const destination = window.open('about:blank', '_blank');
+  if (!destination) return notify('Permite abrir ventanas para continuar con WhatsApp.');
+  destination.opener = null;
+  try {
+    const current = await window.HipercellCatalog.contact(CONFIG);
+    if (!/^\d{8,15}$/.test(current.whatsapp)) throw new Error('La tienda no tiene un WhatsApp de atención configurado.');
+    if (current.currency !== SETTINGS.currency) throw new Error('La moneda de la tienda cambió. Actualiza el catálogo antes de enviar tu pedido.');
+    if (!window.HipercellExtras.sameRates(current.business.monedas)) throw new Error('La tasa de cambio cambió. Actualiza el catálogo antes de enviar tu pedido.');
+    SETTINGS.whatsapp = current.whatsapp;
+    destination.location.replace(`https://wa.me/${current.whatsapp}?text=${encodeURIComponent(message)}`);
+    void window.HipercellExtras.request(items);
+  } catch (error) {
+    destination.close();
+    notify(error.message || 'No se pudo confirmar el WhatsApp de atención. Inténtalo de nuevo.');
+  }
 }
 function showDetail(id) {
   const p = PRODUCTS.find(product => product.id === id);
   if (!p) return;
+  if (!SETTINGS.demo) window.HipercellExtras.view(p.id);
   activeDetailId = id;
   activePhotoIndex = 0;
-  $('detail-content').innerHTML = `<div class="detail-layout"><div class="detail-gallery">${galleryHTML(p)}</div><div class="detail-copy"><span class="category-label">${escapeHTML(p.category)}${SETTINGS.demo ? ' · EJEMPLO' : ''}</span><h2 id="detail-title">${escapeHTML(p.name)}</h2><p>${escapeHTML(p.description)}</p><span class="price">${money(p.price)} <small>${escapeHTML(SETTINGS.currency)}</small></span><button class="button primary" data-add="${p.id}" ${p.available ? '' : 'disabled'}>${p.available ? 'Añadir a mi pedido ＋' : 'Producto agotado'}</button><button class="button secondary" data-contact="${p.id}" ${canContact() ? '' : 'disabled'}>Consultar por WhatsApp ↗</button><p class="demo-note">${SETTINGS.demo ? 'Producto y precio de muestra. WhatsApp pendiente de configurar.' : canContact() ? 'Confirma disponibilidad, pago y entrega con la tienda.' : 'El envío de consultas estará disponible próximamente.'}</p></div></div>`;
+  $('detail-content').innerHTML = `<div class="detail-layout"><div class="detail-gallery">${galleryHTML(p)}</div><div class="detail-copy"><span class="category-label">${escapeHTML(p.category)}${SETTINGS.demo ? ' · EJEMPLO' : ''}</span><h2 id="detail-title">${escapeHTML(p.name)}</h2><p>${escapeHTML(p.description)}</p><span class="price">${money(p.price)} <small>${escapeHTML(displayCurrency())}</small></span><button class="button primary" data-add="${p.id}" ${p.available ? '' : 'disabled'}>${p.available ? 'Añadir a mi pedido ＋' : 'Producto agotado'}</button><button class="button secondary" data-contact="${p.id}" ${canContact() ? '' : 'disabled'}>Consultar por WhatsApp ↗</button><p class="demo-note">${SETTINGS.demo ? 'Producto y precio de muestra. WhatsApp pendiente de configurar.' : canContact() ? 'Confirma disponibilidad, pago y entrega con la tienda.' : 'El envío de consultas estará disponible próximamente.'}</p></div></div>`;
   if (!$('detail').open) $('detail').showModal();
 }
 document.addEventListener('click', event => {
@@ -136,7 +153,7 @@ $('checkout').addEventListener('click', () => {
   const entries = PRODUCTS.filter(p => cart[p.id]);
   const lines = entries.map(p => `• ${cart[p.id]} × ${p.name}: ${money(p.price*cart[p.id])}`);
   const total = entries.reduce((sum,p) => sum+p.price*cart[p.id], 0);
-  openWhatsApp(`Hola, Hipercell. Me interesa este pedido:\n\n${lines.join('\n')}\n\nTotal estimado: ${money(total)}\nQuedo pendiente de confirmar disponibilidad, pago y entrega.`);
+  openWhatsApp(`Hola, Hipercell. Me interesa este pedido:\n\n${lines.join('\n')}\n\nTotal estimado: ${money(total)} ${displayCurrency()}\nQuedo pendiente de confirmar disponibilidad, pago y entrega.`,entries.map(p=>({id:Number(p.id),cantidad:cart[p.id]})));
 });
 for (const dialog of document.querySelectorAll('dialog')) {
   dialog.addEventListener('click', e => {
@@ -158,7 +175,7 @@ function productVisual(product) {
 }
 function galleryHTML(product) {
   const photos = photosFor(product);
-  if (!photos.length) return `<div class="detail-art">${illustration(product.kind)}</div><p class="gallery-caption">Ilustración de muestra · Hasta 3 fotos por producto</p>`;
+  if (!photos.length) return `<div class="detail-art">${illustration(product.kind)}</div><p class="gallery-caption">${SETTINGS.demo?'Ilustración de muestra · Hasta 3 fotos por producto':'Imagen del producto pendiente'}</p>`;
   return `<div class="detail-art"><img id="gallery-main" src="${escapeHTML(photos[0])}" alt="${escapeHTML(product.name)}, foto 1 de ${photos.length}"></div><div class="gallery-controls"><button data-photo-step="-1" aria-label="Foto anterior" ${photos.length < 2 ? 'disabled' : ''}>←</button><span id="photo-position" aria-live="polite">1 / ${photos.length}</span><button data-photo-step="1" aria-label="Foto siguiente" ${photos.length < 2 ? 'disabled' : ''}>→</button></div><div class="photo-thumbnails" role="group" aria-label="Fotos del producto">${photos.map((url,index)=>`<button data-photo="${index}" aria-label="Ver foto ${index+1}" aria-pressed="${index===0}"><img src="${escapeHTML(url)}" alt=""></button>`).join('')}</div>`;
 }
 function selectPhoto(index) {
@@ -204,10 +221,12 @@ async function initializeCatalog() {
       const data = await window.HipercellCatalog.load(CONFIG);
       PRODUCTS = data.products;
       SETTINGS = {currency:data.currency,whatsapp:data.whatsapp,demo:false};
+      window.HipercellExtras.load(data,()=>{renderProducts();renderCart();if(activeDetailId&&$('detail').open)showDetail(activeDetailId);document.querySelector('.results-meta>span+span').textContent=`CATÁLOGO · ${displayCurrency()}`;});
       productPhotos = Object.fromEntries(PRODUCTS.map(p=>[p.id,p.photos]));
       document.querySelector('.preview').textContent = 'HIPERCELL · CATÁLOGO';
-      document.querySelector('.results-meta>span+span').textContent = `CATÁLOGO · ${SETTINGS.currency}`;
-      document.querySelector('footer>a[href="fotos.html"]').hidden = true;
+      document.querySelector('.results-meta>span+span').textContent = `CATÁLOGO · ${displayCurrency()}`;
+      const photoDemoLink=document.querySelector('footer a[href="fotos.html"]');
+      if(photoDemoLink)photoDemoLink.hidden=true;
       document.querySelector('.cart-bottom .demo-note').textContent = CONFIG.checkoutEnabled ? 'Confirma tu pedido con la tienda.' : 'El envío de pedidos estará disponible próximamente.';
     }
     selectedCategory = 'Todos';
@@ -229,3 +248,4 @@ async function initializeCatalog() {
     $('retry-catalog').hidden = false;
   } finally { $('retry-catalog').disabled = false; }
 }
+

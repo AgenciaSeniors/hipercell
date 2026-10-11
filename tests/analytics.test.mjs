@@ -1,0 +1,26 @@
+import { PGlite } from '@electric-sql/pglite';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const db=new PGlite();
+const biz='46a2d035-836b-472c-9f1f-adcde294a923',owner='22222222-2222-4222-8222-222222222222';
+await db.exec(`create role anon;create role authenticated;create schema auth;
+create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create table catalogo_usuarios_negocio(user_id uuid,negocio_id uuid);
+create table catalogo_categorias(id bigint primary key,negocio_id uuid,activo boolean);
+create table catalogo_productos(id bigint primary key,negocio_id uuid,nombre text,activo boolean,categoria_id bigint);
+insert into catalogo_productos values(1,'${biz}','Pantalla',true,null),(2,'${biz}','Cable',true,null),(3,'11111111-1111-4111-8111-111111111111','Ajeno',true,null),(4,'${biz}','Oculto',false,null);
+insert into catalogo_usuarios_negocio values('${owner}','${biz}');
+grant usage on schema auth,public to anon,authenticated;grant select on catalogo_usuarios_negocio to authenticated;`);
+const sql=fs.readFileSync(new URL('../supabase/07-estadisticas-hipercell.sql',import.meta.url),'utf8');await db.exec(sql);await db.exec(sql);
+await db.exec(`set role anon;select hipercell_registrar_evento('vista_catalogo','session', '[]');select hipercell_registrar_evento('vista_catalogo','session','[]');select hipercell_registrar_evento('vista_producto','s:1','[{"id":1,"cantidad":1}]');select hipercell_registrar_evento('solicitud_whatsapp','r1','[{"id":1,"cantidad":2},{"id":2,"cantidad":3}]');`);
+for(const query of [`select * from hipercell_eventos`,`select hipercell_estadisticas(7)`,`select hipercell_registrar_evento('solicitud_whatsapp','foreign','[{"id":3,"cantidad":1}]')`,`select hipercell_registrar_evento('vista_producto','hidden','[{"id":4,"cantidad":1}]')`,`select hipercell_registrar_evento('vista_producto','bad','[{"id":1,"cantidad":0}]')`,`select hipercell_registrar_evento('bad','bad','[]')`])await assert.rejects(db.exec(query));
+await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='33333333-3333-4333-8333-333333333333';`);await assert.rejects(db.exec('select hipercell_estadisticas(7)'));assert.equal((await db.query('select * from hipercell_eventos')).rows.length,0);
+await db.exec(`set request.jwt.claim.sub='${owner}'`);
+const result=(await db.query('select hipercell_estadisticas(7) as result')).rows[0].result;
+assert.equal(result.visitas,1);assert.equal(result.vistas,1);assert.equal(result.solicitudes,1);assert.equal(result.top_solicitados[0].nombre,'Cable');assert.equal(result.top_solicitados[0].unidades,3);
+await assert.rejects(db.exec('select hipercell_estadisticas(-1)'));
+await db.exec(`reset role;update hipercell_eventos set creado_en=now()-interval '10 days';set role authenticated;`);
+assert.equal((await db.query('select hipercell_estadisticas(7) as result')).rows[0].result.visitas,0);
+assert.equal((await db.query('select hipercell_estadisticas(0) as result')).rows[0].result.visitas,1);
+await db.close();console.log('SQL 07 repetible, deduplicación, cantidades, períodos y aislamiento: OK');
+

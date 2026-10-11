@@ -42,7 +42,7 @@ window.createHipercellAdminAPI = (client, config) => {
   const listProducts = () => all('catalogo_productos',columns);
   const listCategories = () => all('catalogo_categorias','id,negocio_id,nombre,orden,activo');
   async function getBusiness() {
-    guard(); const result=await client.from('catalogo_negocios').select('id,nombre,whatsapp,monedas')
+    guard(); const result=await client.from('catalogo_negocios').select('id,nombre,whatsapp,monedas,direccion,instagram,facebook,horario,horario_semanal')
       .eq('id',businessId).single(); fail(result.error);
     if (result.data?.id!==businessId) throw new Error('No se encontró Hipercell.'); return result.data;
   }
@@ -101,9 +101,11 @@ window.createHipercellAdminAPI = (client, config) => {
     const business=await getBusiness();
     let previous=business.monedas;
     if (typeof previous==='string') previous=JSON.parse(previous);
-    const monedas=previous?.base===input.currency ? previous : {base:input.currency,activas:[input.currency],tasas:{}};
-    const result=await client.from('catalogo_negocios').update({whatsapp:phone,monedas})
-      .eq('id',businessId).select('id,nombre,whatsapp,monedas').single(); fail(result.error); return result.data;
+    const monedas=input.monedas ? window.HipercellSettings.currencies(input.monedas) : previous?.base===input.currency ? previous : {base:input.currency,activas:[input.currency],tasas:{}};
+    const values={whatsapp:phone,monedas};
+    if (input.details) Object.assign(values,{direccion:String(input.details.direccion||'').trim().slice(0,500),instagram:window.HipercellSettings.social(input.details.instagram,'instagram'),facebook:window.HipercellSettings.social(input.details.facebook,'facebook'),horario:String(input.details.horario||'').trim().slice(0,1000),horario_semanal:window.HipercellSettings.schedule(input.details.horario_semanal)});
+    const result=await client.from('catalogo_negocios').update(values)
+      .eq('id',businessId).select('id,nombre,whatsapp,monedas,direccion,instagram,facebook,horario,horario_semanal').single(); fail(result.error); return result.data;
   }
   async function uploadPhoto(productId,file) {
     guard();
@@ -120,5 +122,10 @@ window.createHipercellAdminAPI = (client, config) => {
     if (url.protocol!=='https:' || url.origin!==new URL(config.supabaseUrl).origin) throw new Error('URL de foto inesperada.');
     return url.href;
   }
-  return Object.freeze({authorize,clear,listProducts,listCategories,getBusiness,saveProduct,saveCategory,saveBusiness,uploadPhoto,checkedPhotos});
+  async function statistics(days) {
+    guard(); const result=await client.rpc('hipercell_estadisticas',{p_dias:Number(days)});
+    if(result.error)throw new Error('No se pudieron leer las estadísticas. Comprueba que se haya ejecutado el SQL 07.');
+    return result.data;
+  }
+  return Object.freeze({authorize,clear,listProducts,listCategories,getBusiness,saveProduct,saveCategory,saveBusiness,statistics,uploadPhoto,checkedPhotos});
 };

@@ -54,3 +54,4 @@ window.HipercellPhotos = (() => {
   }
   return Object.freeze({ MAX_PHOTOS, MAX_BYTES, validate, readAll, save });
 })();
+

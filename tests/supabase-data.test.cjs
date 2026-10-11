@@ -11,6 +11,14 @@ const id='46a2d035-836b-472c-9f1f-adcde294a923';
 const config={businessId:id,supabaseUrl:'https://example.supabase.co',publishableKey:'sb_publishable_test'};
 const categories=[{id:1,negocio_id:id,nombre:'Repuestos',activo:true}];
 const product={id:10,negocio_id:id,categoria_id:1,nombre:'Pantalla',precio:'35.50',stock:2,estado:'disponible',activo:true,imagenes_url:[]};
+test('contact rereads current tenant phone without fetching products or caching',async()=>{
+ let phone='+53 5555 5555'; const calls=[];
+ const fetcher=async(url,options)=>{calls.push({url:new URL(url),options});return {ok:true,json:async()=>[{id,whatsapp:phone,monedas:{base:'CUP'}}]};};
+ assert.equal((await api.contact(config,fetcher)).whatsapp,'5355555555');
+ phone='+53 6666 6666';assert.equal((await api.contact(config,fetcher)).whatsapp,'5366666666');
+ phone='';assert.equal((await api.contact(config,fetcher)).whatsapp,'');
+ for(const call of calls){assert.equal(call.url.pathname,'/rest/v1/catalogo_negocios');assert.equal(call.url.searchParams.get('id'),'eq.'+id);assert.equal(call.options.cache,'no-store');}
+});
 test('mapping preserves currency-neutral prices and finite stock',()=>{
  const p=api.mapProducts([product],categories,id)[0];assert.equal(p.price,35.5);assert.equal(p.stock,2);assert.equal(p.available,true);
  assert.equal(api.mapProducts([{...product,stock:0}],categories,id)[0].available,false);

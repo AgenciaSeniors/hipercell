@@ -1,6 +1,6 @@
 # Administración de Hipercell
 
-## Activación pendiente en el proyecto real
+## Activación realizada en el proyecto real
 
 1. Ejecutar `supabase/04-proteger-hipercell.sql` en SQL Editor. Crea `hipercell_imagenes`, con lectura pública de fotos, escritura limitada al administrador vinculado a Hipercell, 5 MB por archivo y JPG/PNG/WebP. La base exige máximo tres fotos y portada coherente, y valida que la categoría corresponda al negocio. Las restricciones solo se aplican a Hipercell; no reemplazan las políticas de otros clientes.
 2. En Authentication > Users, crear el usuario `hipercell@gmail.com`. Definir su contraseña directamente en Supabase y confirmar la cuenta por el procedimiento del Dashboard. No enviar esa contraseña al chat ni guardarla en el repositorio.
@@ -18,7 +18,7 @@ Los SQL están preparados y probados en una base aislada; no se han ejecutado so
 - La primera creación queda como borrador oculto hasta completar las fotos y confirmar el guardado final. Si no puede confirmarse una escritura, el panel exige actualizar la lista antes de repetirla.
 - Todas las consultas y escrituras del panel se filtran por el UUID del negocio. Las políticas de Supabase siguen siendo la protección efectiva.
 - Las ediciones de producto/categoría comprueban el estado leído para no sobrescribir cambios realizados en otra sesión.
-- Permite configurar moneda base y WhatsApp. Cambiar la moneda no convierte precios. El envío permanece desactivado en config.js hasta confirmar datos y flujo.
+- Permite configurar moneda base y WhatsApp. Cambiar la moneda no convierte precios. El usuario confirmó la apertura de WhatsApp y el envío está habilitado si hay número válido.
 
 ## Conservación de archivos
 
@@ -38,5 +38,8 @@ Se verificaron el origen y la integridad SHA-512 del SDK descargado del registro
 
 Para reproducir las pruebas: instalar las dependencias de desarrollo de package.json y ejecutar `npm test` desde la carpeta del repositorio. El catálogo y el panel se sirven como archivos estáticos; esas dependencias solo se usan en pruebas. La suite SQL usa PostgreSQL en memoria y no se conecta al proyecto real.
 
-El navegador automatizado del entorno sigue fallando al arrancar. Revisión visual, login con la cuenta real, decodificación real de fotos y recorrido completo de subida/guardado en Supabase pendientes. No hay despliegue ni datos de muestra insertados en la base real.
+El usuario confirmó el inicio de sesión y el recorrido de categorías, productos y fotos contra Supabase. El navegador automatizado del entorno sigue fallando al arrancar; esta validación del recorrido real fue manual por el usuario. La web aún no está publicada.
 
+
+
+Ajustes ampliados, monedas disponibles, horarios, redes, QR y estadísticas: ver FUNCIONES-DEL-PANEL.md. El SQL 07 está preparado y probado de forma aislada; pendiente de aplicar por el usuario en Supabase.

@@ -10,3 +10,4 @@ window.HIPERCELL_PRODUCTS = Object.freeze([
   { id: 'demo-07', name: 'Soporte de escritorio', category: 'Accesorios', price: 12, kind: 'stand', featured: false, available: true, short: 'Tu pantalla, en su lugar.', description: 'Ejemplo de soporte de escritorio. Las dimensiones y materiales mostrados en la versión final corresponderán al producto real.' },
   { id: 'demo-08', name: 'Altavoz portátil', category: 'Audio', price: 32, kind: 'speaker', featured: false, available: true, short: 'Lleva tu sonido más lejos.', description: 'Ejemplo de altavoz portátil. La potencia, conectividad y autonomía se completarán al incorporar los productos de Hipercell.' }
 ]);
+
