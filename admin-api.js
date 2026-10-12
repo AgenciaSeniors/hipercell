@@ -3,8 +3,8 @@ window.createHipercellAdminAPI = (client, config) => {
   let authorized = false;
   const businessId = config.businessId;
   const bucket = 'hipercell_imagenes';
-  const columns = 'id,negocio_id,categoria_id,nombre,descripcion,precio,stock,estado,destacado,activo,imagen_url,imagenes_url';
-  const editable = ['nombre','descripcion','precio','stock','categoria_id','estado','destacado','activo','imagen_url','imagenes_url'];
+  const columns = 'id,negocio_id,categoria_id,nombre,descripcion,precio,stock,estado,destacado,activo,imagen_url,imagenes_url,hipercell_eliminado_en';
+  const editable = ['nombre','descripcion','precio','stock','categoria_id','estado','destacado','activo','imagen_url','imagenes_url','hipercell_eliminado_en'];
   const safeId = value => /^\d+$/.test(String(value));
   function guard() { if (!authorized) throw new Error('Inicia sesión con el administrador de Hipercell.'); }
   function fail(error) { if (error) throw new Error(error.message || 'No se pudo completar la operación.'); }
@@ -39,7 +39,7 @@ window.createHipercellAdminAPI = (client, config) => {
       rows.push(...result.data); if (result.data.length<500) return rows;
     }
   }
-  const listProducts = () => all('catalogo_productos',columns);
+  async function listProducts() { try { return await all('catalogo_productos',columns); } catch(error) { if(error.message.includes('hipercell_eliminado_en'))throw new Error('Ejecuta el SQL 08 de la papelera en Supabase y vuelve a iniciar sesión.');throw error; } }
   const listCategories = () => all('catalogo_categorias','id,negocio_id,nombre,orden,activo');
   async function getBusiness() {
     guard(); const result=await client.from('catalogo_negocios').select('id,nombre,whatsapp,monedas,direccion,instagram,facebook,horario,horario_semanal')
@@ -64,6 +64,7 @@ window.createHipercellAdminAPI = (client, config) => {
       estado:input.estado,destacado:input.destacado===true,activo:input.activo===true,imagenes_url:photos,imagen_url:photos[0] || null};
   }
   async function saveProduct(input, baseline=null) {
+    if(baseline?.hipercell_eliminado_en)throw new Error('Restaura el producto desde la papelera antes de editarlo.');
     const values=await productValues(input);
     let query;
     if (!baseline) query=client.from('catalogo_productos').insert(values);
@@ -78,6 +79,16 @@ window.createHipercellAdminAPI = (client, config) => {
     }
     const result=await query.select(columns).maybeSingle(); fail(result.error);
     if (!result.data || result.data.negocio_id!==businessId) throw new Error('El producto cambió en otra sesión. Vuelve a cargarlo antes de guardar.');
+    return result.data;
+  }
+  async function setTrashed(baseline, trashed) {
+    guard();
+    if (!baseline || !safeId(baseline.id) || baseline.negocio_id!==businessId)throw new Error('Producto ajeno o inválido.');
+    if(Boolean(baseline.hipercell_eliminado_en)===trashed)throw new Error('Actualiza la lista: el estado del producto cambió.');
+    let query=client.from('catalogo_productos').update({activo:false,hipercell_eliminado_en:trashed?new Date().toISOString():null}).eq('id',baseline.id).eq('negocio_id',businessId);
+    for(const field of editable){const value=baseline[field];query=value==null?query.is(field,null):query.eq(field,field==='imagenes_url'?JSON.stringify(value):value);}
+    const result=await query.select(columns).maybeSingle();fail(result.error);
+    if(!result.data || result.data.negocio_id!==businessId)throw new Error('El producto cambió en otra sesión. Actualiza la lista antes de repetir.');
     return result.data;
   }
   async function saveCategory(input, baseline=null) {
@@ -127,5 +138,5 @@ window.createHipercellAdminAPI = (client, config) => {
     if(result.error)throw new Error('No se pudieron leer las estadísticas. Comprueba que se haya ejecutado el SQL 07.');
     return result.data;
   }
-  return Object.freeze({authorize,clear,listProducts,listCategories,getBusiness,saveProduct,saveCategory,saveBusiness,statistics,uploadPhoto,checkedPhotos});
+  return Object.freeze({authorize,clear,listProducts,listCategories,getBusiness,saveProduct,saveCategory,saveBusiness,statistics,uploadPhoto,checkedPhotos,setTrashed});
 };

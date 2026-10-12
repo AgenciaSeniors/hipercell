@@ -97,3 +97,21 @@ test('category and business updates are tenant scoped; currency change resets ol
  assert.equal(business.whatsapp,'5355555555');assert.equal(business.monedas.base,'USD');assert.equal(business.monedas.activas.length,1);
  for(const q of calls.filter(q=>q.operation==='update'))assert.ok(q.filters.some(f=>(f.field==='negocio_id'||f.field==='id')&&f.value===biz));
 });
+
+test('trash preserves product data and restores hidden; stale edit cannot resurrect it',async()=>{
+ const {api,state}=fixture();await api.authorize();
+ const original=structuredClone(state.tables.catalogo_productos[0]);
+ const trashed=await api.setTrashed(original,true);
+ assert.equal(trashed.activo,false);assert.ok(trashed.hipercell_eliminado_en);assert.equal(trashed.precio,original.precio);assert.deepEqual(trashed.imagenes_url,original.imagenes_url);
+ await assert.rejects(api.saveProduct(input,original),/otra sesión/);
+ await assert.rejects(api.saveProduct(input,structuredClone(trashed)),/Restaura/);
+ const restored=await api.setTrashed(structuredClone(trashed),false);
+ assert.equal(restored.activo,false);assert.equal(restored.hipercell_eliminado_en,null);assert.equal(state.tables.catalogo_productos.length,1);
+});
+test('trash requires authentication and rejects foreign or changed products',async()=>{
+ const {api,state}=fixture();const original=structuredClone(state.tables.catalogo_productos[0]);
+ await assert.rejects(api.setTrashed(original,true),/Inicia sesión/);await api.authorize();
+ await assert.rejects(api.setTrashed({...original,negocio_id:'other'},true),/ajeno/);
+ state.tables.catalogo_productos[0].stock=0;
+ await assert.rejects(api.setTrashed(original,true),/otra sesión/);assert.equal(state.tables.catalogo_productos[0].activo,true);
+});
